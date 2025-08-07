@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  dvwa:
+    image: dvwa
+    container_name: dvwa_app
+    hostname: dvwa.com
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - MYSQL_USER=dvwa
+      - MYSQL_PASSWORD=p@ssw0rd
+      - MYSQL_DATABASE=dvwa
+      - MYSQL_HOST=localhost
+    command: >
+      bash -c "
+        service mariadb start && \
+        service apache2 start && \
+        tail -f /dev/null
+      "
+

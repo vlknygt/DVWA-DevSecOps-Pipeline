@@ -1,0 +1,130 @@
+env:
+  contexts:
+  - name: DVWA-form
+    urls:
+    - http://localhost:1235/DVWA
+    includePaths:
+    - http://localhost:1235/DVWA.*
+    excludePaths:
+    - http://localhost:1235/DVWA/logout.php
+    - http://localhost:1235/DVWA/login.php
+    - http://localhost:1235/DVWA/setup.php
+    - http://localhost:1235/DVWA/security.php
+    - http://localhost:1235/DVWA/vulnerabilities/csrf.*
+    authentication:
+      method: form
+      parameters:
+        loginRequestBody: "username={%username%}&password=password&Login=Login&user_token=f4c2be9fba02186111829f053797c917"
+        loginRequestUrl: http://localhost:1235/DVWA/login.php
+        loginPageUrl: http://localhost:1235/DVWA/login.php
+      verification:
+        method: poll
+        loggedInRegex: \Qadmin\E
+        pollFrequency: 60
+        pollUnits: requests
+        pollUrl: http://localhost:1235/DVWA/instructions.php
+        pollPostData: ""
+    sessionManagement:
+      method: headers
+      parameters:
+        Cookie: "PHPSESSID={%cookie:PHPSESSID%}; security=low"
+    technology:
+      exclude:
+      - Firebird
+      - MongoDB
+      - HypersonicSQL
+      - IBM DB2
+      - SAP MaxDB
+      - SQLite
+      - CouchDB
+      - Microsoft SQL Server
+      - Oracle
+      - PostgreSQL
+      - Microsoft Access
+      - Sybase
+    structure: {}
+    users:
+    - name: test
+      credentials:
+        password: password
+        username: admin
+  parameters: {}
+jobs:
+- type: spider
+  parameters:
+    context: DVWA-form
+    user: test
+    maxDepth: 0
+  tests:
+  - name: At least 100 URLs found
+    type: stats
+    onFail: ERROR
+    statistic: automation.spider.urls.added
+    operator: '>='
+    value: 100
+- type: passiveScan-wait
+  parameters: {}
+- type: activeScan
+  parameters:
+    context: DVWA-form
+    user: test
+    maxRuleDurationInMins: 3
+    maxScanDurationInMins: 3
+    threadPerHost: 6
+    maxAlertsPerRule: 4
+  policyDefinition:
+    defaultStrength: low
+    defaultThreshold: medium
+    rules:
+    - name: .env Information Leak
+      id: 40034
+      threshold: medium
+      strength: default
+    - name: .htaccess Information Leak
+      id: 40032
+      threshold: medium
+      strength: default
+    - name: Cross Site Scripting (Reflected)
+      id: 40012
+      threshold: medium
+      strength: default
+    - name: Cross Site Scripting (DOM Based)
+      id: 40026
+      threshold: medium
+      strength: default
+    - name: Cross Site Scripting (Persistent)
+      id: 40014
+      threshold: medium
+      strength: default
+    - name: External Redirect
+      id: 20019
+      threshold: medium
+      strength: default
+    - name: Path Traversal
+      id: 6
+      threshold: medium
+      strength: default
+    - name: Remote File Inclusion
+      id: 7
+      threshold: medium
+      strength: default
+    - name: Remote OS Command Injection
+      id: 90020
+      threshold: medium
+      strength: default
+    - name: SQL Injection - MySQL
+      id: 40019
+      threshold: medium
+      strength: default
+- type: report
+  parameters:
+    template: traditional-json
+    reportDir: /home/ubuntu-jenkins/Desktop/zap-report
+    reportTitle: ZAP Scanning Report
+  risks:
+  - high
+  confidences:
+  - medium
+  - high
+  - confirmed
+
